@@ -94,7 +94,7 @@ class SohuNews2008(DataSetParams):
 class PTBCorpusWord(DataSetParams):
     def __init__(self):
         super(PTBCorpusWord, self).__init__()
-        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus', 'data')
+        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus')
         self.train_url = os.path.join(ptb_corpus_data, 'ptb.train.txt')
         self.raw_url = self.train_url
         self.val_url = os.path.join(ptb_corpus_data, 'ptb.valid.txt')
@@ -104,7 +104,7 @@ class PTBCorpusWord(DataSetParams):
 class PTBCorpusChar(DataSetParams):
     def __init__(self):
         super(PTBCorpusChar, self).__init__()
-        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus', 'data')
+        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus')
         self.train_url = os.path.join(ptb_corpus_data, 'ptb.char.train.txt')
         self.raw_url = self.train_url
         self.val_url = os.path.join(ptb_corpus_data, 'ptb.char.valid.txt')
