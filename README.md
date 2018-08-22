@@ -3,6 +3,9 @@ Language modeling using several deep models.
 
 ## Implemented models
 - Baseline model: Deep Bi-LSTM based model.
+- RNMT+ encoder based model.
+- Transformer encoder based model.
+- Multi head attention based model.
 
 ## Get started
 - The main entry point is at `train.py`.
