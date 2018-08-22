@@ -135,7 +135,7 @@ class DeepBiLSTMHParams(BasicHParams):
         self.early_stop_monitor = 'val_loss'
         self.early_stop_patience = 20
 
-        self.batch_size = 128
+        self.batch_size = 512
 
     def __str__(self):
         ret_info = list()

@@ -18,7 +18,7 @@ class DataSetParams:
         self.open_file_encoding = 'utf-8'
         self.save_file_encoding = 'utf-8'
 
-        self.raw_path = None
+        self.raw_url = None
         self.train_url = None
         self.val_url = None
         self.test_url = None
@@ -30,7 +30,7 @@ class DataSetParams:
         ret_info.append("open file encoding: " + self.open_file_encoding + '\n')
         ret_info.append("save file encoding: " + self.save_file_encoding + '\n\n')
 
-        ret_info.append("raw path: " + str(self.raw_path) + '\n')
+        ret_info.append("raw url: " + str(self.raw_url) + '\n')
         ret_info.append("train url: " + str(self.train_url) + '\n')
         ret_info.append("val url: " + str(self.val_url) + '\n')
         ret_info.append("test url: " + str(self.test_url) + '\n\n')
@@ -46,7 +46,7 @@ class JustForTest(DataSetParams):
 
         # just for test
         just_for_test = os.path.join(PROJECT_ROOT, 'data', 'just_for_test')
-        self.raw_path = just_for_test
+        self.raw_url = just_for_test
         self.train_url = just_for_test
         self.val_url = just_for_test
         self.test_url = just_for_test
@@ -74,7 +74,7 @@ class SohuNews2008(DataSetParams):
         self.processed_zh_word_vecs_url = os.path.join(self.processed_data_dir, 'processed.wiki.zh.vec')
 
         # raw, train, val, test
-        self.raw_path = self.raw_data_dir
+        self.raw_url = self.raw_data_dir
         self.train_url = os.path.join(self.processed_data_dir, 'zh_train')
         self.val_url = os.path.join(self.processed_data_dir, 'zh_val')
         self.test_url = os.path.join(self.processed_data_dir, 'zh_test')
@@ -91,10 +91,32 @@ class SohuNews2008(DataSetParams):
         return ''.join(ret_info) + super_str
 
 
+class PTBCorpusWord(DataSetParams):
+    def __init__(self):
+        super(PTBCorpusWord, self).__init__()
+        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus', 'data')
+        self.train_url = os.path.join(ptb_corpus_data, 'ptb.train.txt')
+        self.raw_url = self.train_url
+        self.val_url = os.path.join(ptb_corpus_data, 'ptb.valid.txt')
+        self.test_url = os.path.join(ptb_corpus_data, 'ptb.test.txt')
+
+
+class PTBCorpusChar(DataSetParams):
+    def __init__(self):
+        super(PTBCorpusChar, self).__init__()
+        ptb_corpus_data = os.path.join(PROJECT_ROOT, 'data', 'ptb-corpus', 'data')
+        self.train_url = os.path.join(ptb_corpus_data, 'ptb.char.train.txt')
+        self.raw_url = self.train_url
+        self.val_url = os.path.join(ptb_corpus_data, 'ptb.char.valid.txt')
+        self.test_url = os.path.join(ptb_corpus_data, 'ptb.char.test.txt')
+
+
 corpus_name_abbr_full = {'just_for_test': JustForTest().__class__.__name__,
-                          'sohu_news_2008': SohuNews2008().__class__.__name__}
+                         'sohu_news_2008': SohuNews2008().__class__.__name__,
+                         'ptb_word': PTBCorpusWord().__class__.__name__,
+                         'ptb_char': PTBCorpusChar().__class__.__name__}
 corpus_name_full_abbr = {v: k for k, v in corpus_name_abbr_full.items()}
-available_corpus = ['just_for_test', 'sohu_news_2008']
+available_corpus = ['just_for_test', 'sohu_news_2008', 'ptb_word', 'ptb_char']
 
 
 def get_corpus_params(corpus_name):
@@ -102,6 +124,10 @@ def get_corpus_params(corpus_name):
         return JustForTest()
     elif corpus_name == available_corpus[1]:
         return SohuNews2008()
+    elif corpus_name == available_corpus[2]:
+        return PTBCorpusWord()
+    elif corpus_name == available_corpus[3]:
+        return PTBCorpusChar()
     else:
         raise ValueError('In ' + sys._getframe().f_code.co_name +
                          '() func, corpus_name value error.')

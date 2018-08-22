@@ -127,18 +127,19 @@ def split_train_val_test(raw_path, train_fname, val_fname, test_fname,
     test data used for unbiased estimation of model performance.
     :return: None
     """
+    current_func_name = sys._getframe().f_code.co_name
     if raw_path in [train_fname, val_fname, test_fname]:
-        print('\n======== In', sys._getframe().f_code.co_name, '========')
+        print('\n======== In', current_func_name, '========')
         print('Raw path and train, val, test data filenames are the same.')
         print('No split.')
         return
     if os.path.exists(train_fname) and os.path.exists(val_fname) and os.path.exists(test_fname):
-        print('\n======== In', sys._getframe().f_code.co_name, '========')
+        print('\n======== In', current_func_name, '========')
         print('Train, val and test data already exists.')
         return
     if not os.path.isdir(raw_path):
-        raise ValueError('In ' + sys._getframe().f_code.co_name +
-                         ' func, argument should be path.')
+        raise ValueError('In ' + current_func_name +
+                         '() func, argument should be path.')
     with open(train_fname, 'w', encoding=save_encoding) as train_file, \
             open(val_fname, 'w', encoding=save_encoding) as val_file, \
             open(test_fname, 'w', encoding=save_encoding) as test_file:
@@ -203,7 +204,7 @@ def fit_tokenizer(raw_url, keep_word_num, filters='', oov_tag='<UNK>',
                   char_level=False, open_encoding='utf-8'):
     """
     use corpus fit tokenizer.
-    :param raw_url: corpus path.
+    :param raw_url: corpus path or filename.
     :param keep_word_num: the maximum number of words to keep, based
             on word frequency. Only the most common `vocab_size` words
             will be kept.

@@ -38,7 +38,7 @@ class BasicModel:
         self.this_model_save_dir = None
 
         self.pretrained_word_vecs_fname = None
-        self.raw_path = None
+        self.raw_url = None
         self.train_fname = None
         self.val_fname = None
         self.test_fname = None
@@ -60,13 +60,13 @@ class BasicModel:
 
     def setup(self, hyperparams, corpus_params):
         self.pretrained_word_vecs_fname = corpus_params.pretrained_word_vecs_url
-        self.raw_path = corpus_params.raw_path
+        self.raw_url = corpus_params.raw_url
         self.train_fname = corpus_params.train_url
         self.val_fname = corpus_params.val_url
         self.test_fname = corpus_params.test_url
         self.open_encoding = corpus_params.open_file_encoding
         self.save_encoding = corpus_params.save_file_encoding
-        reader.split_train_val_test(self.raw_path,
+        reader.split_train_val_test(self.raw_url,
                                     self.train_fname, self.val_fname, self.test_fname,
                                     self.open_encoding, self.save_encoding)
 
@@ -85,7 +85,7 @@ class BasicModel:
         self.word_vec_dim = hyperparams.word_vec_dim
         self.time_step = hyperparams.time_step
         self.batch_size = hyperparams.batch_size
-        self.tokenizer = reader.fit_tokenizer(self.raw_path, self.keep_word_num,
+        self.tokenizer = reader.fit_tokenizer(self.raw_url, self.keep_word_num,
                                               hyperparams.filters, hyperparams.oov_tag,
                                               hyperparams.char_level,
                                               self.open_encoding)
@@ -94,7 +94,7 @@ class BasicModel:
         self.pad = self.hyperparams.pad
         self.cut = self.hyperparams.cut
 
-        self.total_samples_count = reader.count_lines(self.raw_path, self.open_encoding)
+        self.total_samples_count = reader.count_lines(self.raw_url, self.open_encoding)
         self.train_samples_count = reader.count_lines(self.train_fname, self.open_encoding)
         self.val_samples_count = reader.count_lines(self.val_fname, self.open_encoding)
         self.test_samples_count = reader.count_lines(self.test_fname, self.open_encoding)
