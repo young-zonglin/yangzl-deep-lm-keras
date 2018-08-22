@@ -200,15 +200,16 @@ class Encoder:
                                         p_dropout, mode, batch_size)
                            for _ in range(layers_num)]
 
-    def __call__(self, src_word_vec_seq, src_seq, src_pos, return_attn=False, active_layers=999):
-        x = src_word_vec_seq
-        if src_pos is not None:
-            pos_enc = self.pos_enc_layer(src_pos)
-            x = Add()([x, pos_enc])
+    def __call__(self, word_vec_seq, word_id_seq, pos_seq,
+                 return_attn=False, active_layers=999):
+        x = word_vec_seq
+        if pos_seq is not None:
+            pos_enc_seq = self.pos_enc_layer(pos_seq)
+            x = Add()([x, pos_enc_seq])
         # apply dropout to the sums of emb and pos enc
         x = Dropout(self.p_dropout)(x)
         attns = []
-        mask = GetPadMask()(src_seq)
+        mask = GetPadMask()(word_id_seq)
         # 只激活哪些层
         for enc_layer in self.enc_layers[:active_layers]:
             x, attn = enc_layer(x, mask)

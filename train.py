@@ -6,9 +6,9 @@ from utils import tools
 
 
 def train():
-    run_this_model = available_models[0]
-    language_model = ModelFactory.make_model(run_this_model)
-    hyperparams = net_conf.get_hyperparams(run_this_model)
+    model_name = available_models[0]
+    language_model = ModelFactory.make_model(model_name)
+    hyperparams = net_conf.get_hyperparams(model_name)
     corpus_name = available_corpus[0]
     corpus_params = params.get_corpus_params(corpus_name)
     tools.train_model(language_model, hyperparams, corpus_params)

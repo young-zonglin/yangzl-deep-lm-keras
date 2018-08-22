@@ -1,4 +1,5 @@
 import os
+import sys
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 RESULT_SAVE_DIR = os.path.join(PROJECT_ROOT, 'result')
@@ -102,7 +103,8 @@ def get_corpus_params(corpus_name):
     elif corpus_name == available_corpus[1]:
         return SohuNews2008()
     else:
-        return DataSetParams()
+        raise ValueError('In ' + sys._getframe().f_code.co_name +
+                         '() func, corpus_name value error.')
 
 
 if __name__ == '__main__':

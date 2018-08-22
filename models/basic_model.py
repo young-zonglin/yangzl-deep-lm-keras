@@ -158,8 +158,7 @@ class BasicModel:
             preds = TimeDistributed(Dense(self.vocab_size+1, activation='softmax',
                                           kernel_regularizer=regularizers.l2(self.hyperparams.kernel_l2_lambda),
                                           bias_regularizer=regularizers.l2(self.hyperparams.bias_l2_lambda),
-                                          activity_regularizer=regularizers.l2(self.hyperparams.activity_l2_lambda)
-                                          )
+                                          activity_regularizer=regularizers.l2(self.hyperparams.activity_l2_lambda))
                                     )(context_repr_seq)
 
         self.model = Model(inputs=word_id_seq, outputs=preds)

@@ -1,3 +1,5 @@
+import sys
+
 from keras.callbacks import Callback
 from keras.optimizers import Adam, RMSprop
 
@@ -12,9 +14,6 @@ available_models = ['DBLBModel', 'TEBModel', 'REBModel', 'MHABModel']
 
 
 def get_hyperparams(model_name):
-    if not model_name:
-        return BasicHParams()
-
     if model_name == available_models[0]:
         return DeepBiLSTMHParams()
     elif model_name == available_models[1]:
@@ -24,7 +23,8 @@ def get_hyperparams(model_name):
     elif model_name == available_models[3]:
         return MultiHeadAttnHParams()
     else:
-        return BasicHParams()
+        raise ValueError('In ' + sys._getframe().f_code.co_name +
+                         '() func, model_name value error.')
 
 
 # Avoid crossing import between modules.
@@ -41,7 +41,7 @@ class BasicHParams:
     def __init__(self):
         self.current_classname = self.__class__.__name__
 
-        self.mode = 0
+        self.mode = 1
 
         self.time_step = 20
         self.keep_word_num = 10000
@@ -53,7 +53,7 @@ class BasicHParams:
 
         self.p_dropout = 0.5
 
-        self.batch_size = 32  # Integer multiple of 32
+        self.batch_size = 128  # Integer multiple of 32
 
         self.optimizer = Adam()
         self.lr_scheduler = LRSchedulerDoNothing()
@@ -133,7 +133,7 @@ class DeepBiLSTMHParams(BasicHParams):
         self.lr_scheduler = LRSchedulerDoNothing()
 
         self.early_stop_monitor = 'val_loss'
-        self.early_stop_patience = 40
+        self.early_stop_patience = 20
 
         self.batch_size = 128
 
@@ -152,16 +152,16 @@ class RNMTPlusEncoderHParams(BasicHParams):
     def __init__(self):
         super(RNMTPlusEncoderHParams, self).__init__()
         # follow SBLDModel
-        self.retseq_layer_num = 2
+        self.retseq_layer_num = 1
         self.state_dim = self.word_vec_dim
 
         # Layer Norm also has a regularization effect
-        self.p_dropout = 0.3
+        self.p_dropout = 0.0
 
         # follow origin paper
-        self.kernel_l2_lambda = 1e-5
-        self.recurrent_l2_lambda = 1e-5
-        self.bias_l2_lambda = 1e-5
+        self.kernel_l2_lambda = 0
+        self.recurrent_l2_lambda = 0
+        self.bias_l2_lambda = 0
         self.activity_l2_lambda = 0
 
         self.lr = 0.001
@@ -169,7 +169,6 @@ class RNMTPlusEncoderHParams(BasicHParams):
         self.beta_2 = 0.999
         self.eps = 1e-6
         self.optimizer = Adam(self.lr, self.beta_1, self.beta_2, epsilon=self.eps)  # follow origin paper
-        # should use RNMT+ lr scheduler here
         self.lr_scheduler = LRSchedulerDoNothing()
 
         self.early_stop_monitor = 'val_acc'
@@ -210,10 +209,7 @@ class TransformerEncoderHParams(BasicHParams):
         self.d_k = self.d_v = int(self.d_model/self.n_head)
         self.d_pos_enc = self.d_model
         # 0.3 or 0.4 is a good value.
-        self.p_dropout = 0.4
-
-        # Should be proportional to the dimension of the feature vectors.
-        self.state_dim = self.d_model
+        self.p_dropout = 0.0
 
         self.lr = 0.001
         self.beta_1 = 0.9
@@ -251,8 +247,6 @@ class TransformerEncoderHParams(BasicHParams):
         ret_info.append('dim of v: ' + str(self.d_v) + '\n')
         ret_info.append('pos enc dim: ' + str(self.d_pos_enc) + '\n\n')
 
-        ret_info.append('state dim: ' + str(self.state_dim) + '\n\n')
-
         ret_info.append('lr: ' + str(self.lr) + '\n')
         ret_info.append('beta_1: ' + str(self.beta_1) + '\n')
         ret_info.append('beta_2: ' + str(self.beta_2) + '\n')
@@ -275,7 +269,7 @@ class MultiHeadAttnHParams(BasicHParams):
         self.pad = 'post'
         self.cut = 'post'
 
-        self.early_stop_monitor = 'val_acc'
+        self.early_stop_monitor = 'val_loss'
 
         self.batch_size = 128
 
