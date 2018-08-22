@@ -57,7 +57,8 @@ class MultiHeadAttention:
 
         # d_k = d_v = d_model/n_head
         if mode == 0:
-            self.qs_layer = Dense(n_head * d_k, use_bias=False)
+            # Both are ok.
+            self.qs_layer = TimeDistributed(Dense(n_head * d_k, use_bias=False))
             self.ks_layer = Dense(n_head * d_k, use_bias=False)
             self.vs_layer = Dense(n_head * d_v, use_bias=False)
         elif mode == 1:

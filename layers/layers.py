@@ -146,14 +146,15 @@ class Reshape1(Layer):
         self.batch_size = batch_size
 
     def call(self, inputs, **kwargs):
+        x = inputs
         n_head = self.n_head
         d_k = self.d_k
-        s = tf.shape(inputs)  # [batch_size, len_q, n_head * d_k]
-        inputs = tf.reshape(inputs, [s[0], s[1], n_head, d_k])
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
+        s = K.shape(x)  # [batch_size, len_q, n_head * d_k]
+        x = K.reshape(x, [s[0], s[1], n_head, d_k])
+        x = tf.transpose(x, [2, 0, 1, 3])
         # -1意味着自动推断
-        inputs = tf.reshape(inputs, [-1, s[1], d_k])  # [n_head * batch_size, len_q, d_k]
-        return inputs
+        x = K.reshape(x, [-1, s[1], d_k])  # [n_head * batch_size, len_q, d_k]
+        return x
 
     def compute_output_shape(self, input_shape):
         return self.n_head*self.batch_size, input_shape[1], self.d_k
@@ -174,14 +175,15 @@ class Reshape2(Layer):
         self.batch_size = batch_size
 
     def call(self, inputs, **kwargs):
+        x = inputs
         n_head = self.n_head
         d_v = self.d_v
-        s = tf.shape(inputs)  # [n_head * batch_size, seq_len, d_v]
-        inputs = tf.reshape(inputs, [n_head, -1, s[1], s[2]])
-        inputs = tf.transpose(inputs, [1, 2, 0, 3])
+        s = K.shape(x)  # [n_head * batch_size, seq_len, d_v]
+        x = K.reshape(x, [n_head, -1, s[1], s[2]])
+        x = tf.transpose(x, [1, 2, 0, 3])
         # n_head * s[2]会出错！
-        inputs = tf.reshape(inputs, [-1, s[1], n_head * d_v])  # [batch_size, seq_len, n_head * d_v]
-        return inputs
+        x = K.reshape(x, [-1, s[1], n_head * d_v])  # [batch_size, seq_len, n_head * d_v]
+        return x
 
     def compute_output_shape(self, input_shape):
         return self.batch_size, input_shape[1], self.n_head * self.d_v
