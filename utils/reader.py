@@ -3,25 +3,23 @@ import os
 import re
 import sys
 
-import nltk
 import numpy as np
 import numpy.random as random
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.utils import to_categorical
 
-from configs import params
-from configs.params import available_corpus
 from utils import tools
 
 match_newline_pattern = re.compile('\n+')
 
 
-def _load_word_vecs(fname, head_n=None, open_encoding='utf-8'):
+def load_word_vecs(fname, head_n=None, open_encoding='utf-8'):
     """
     装载前N个词向量
     :param fname:
     :param head_n: head n word vectors will be loaded
+    :param open_encoding: open file encoding
     :return: dict, {word: str => vector: float list}
     """
     line_count = 0
@@ -53,7 +51,7 @@ def generate_text_from_corpus(path, open_encoding='utf-8'):
     """
     生成器函数，一次返回一个文本的全部内容
     :param path: corpus path
-    :param open_encoding:
+    :param open_encoding: open file encoding
     :return: 返回迭代器，可以遍历path下所有文件的内容
     """
     if not os.path.isdir(path):
@@ -65,20 +63,18 @@ def generate_text_from_corpus(path, open_encoding='utf-8'):
             yield file.read()
 
 
-def _read_words(path, open_encoding='utf-8'):
+def read_words(path, open_encoding='utf-8'):
     """
-    read all distinct words
-    :param fname:
+    Read all distinct words.
+    :param path:
+    :param open_encoding:
     :return: set, {'apple', 'banana', ...}
     """
     ret_words = set()
     for text in generate_text_from_corpus(path, open_encoding):
         for line in match_newline_pattern.split(text):
-            if line == '':
-                continue
             for word in line.split():
-                if word:
-                    ret_words.add(word)
+                ret_words.add(word)
     return ret_words
 
 
@@ -90,30 +86,30 @@ def get_needed_vectors(raw_path, full_vecs_fname, needed_vecs_fname,
     3. Return needed word vectors dict.
     :return: dict, {word: str => vector: float list}
     """
-    all_words = _read_words(raw_path, open_encoding)
-    needed_word2vec = _load_word_vecs(needed_vecs_fname, open_encoding=open_encoding)
+    all_words = read_words(raw_path, open_encoding)
+    needed_word2vec = load_word_vecs(needed_vecs_fname, open_encoding=open_encoding)
 
     is_all_in_needed = True
     for word in all_words:
         if word not in needed_word2vec:
-            print(word, 'not in needed word2vec')
+            print(word, 'not in needed word2vec.')
             is_all_in_needed = False
     if not is_all_in_needed:
         with open(full_vecs_fname, 'r', encoding=open_encoding) as full_file, \
                 open(needed_vecs_fname, 'a', encoding=save_encoding) as needed_file:
             line_count = 0
-            print('============ In get_needed_vectors() func ============')
+            print('============ In ' + sys._getframe().f_code.co_name + '() func ============')
             for line in full_file:
                 line_count += 1
                 if line_count % 100000 == 0:
-                    print(line_count, 'has been processed')
-                tokens = line.strip().split(' ')
+                    print(line_count, 'has been processed.')
+                tokens = line.strip().split()
                 word = tokens[0]
                 if word in all_words and word not in needed_word2vec:
                     for token in tokens:
                         needed_file.write(token+' ')
                     needed_file.write('\n')
-        needed_word2vec = _load_word_vecs(needed_vecs_fname, open_encoding=open_encoding)
+        needed_word2vec = load_word_vecs(needed_vecs_fname, open_encoding=open_encoding)
     else:
         print('All words in needed word2vec.')
     return needed_word2vec
@@ -122,7 +118,7 @@ def get_needed_vectors(raw_path, full_vecs_fname, needed_vecs_fname,
 def split_train_val_test(raw_path, train_fname, val_fname, test_fname,
                          open_encoding='utf-8', save_encoding='utf-8'):
     """
-    randomly split raw data to train data, val data and test data.
+    randomly split raw data corpus to train data, val data and test data.
     train : val : test = 8:1:1
     test data used for unbiased estimation of model performance.
     :return: None
@@ -149,11 +145,11 @@ def split_train_val_test(raw_path, train_fname, val_fname, test_fname,
                     continue
                 rand_value = random.rand()
                 if rand_value >= 0.2:
-                    train_file.write(line)
+                    train_file.write(line + '\n')
                 elif 0.1 <= rand_value < 0.2:
-                    val_file.write(line)
+                    val_file.write(line + '\n')
                 else:
-                    test_file.write(line)
+                    test_file.write(line + '\n')
 
 
 def load_pretrained_word_vecs(fname, open_encoding='utf-8'):
@@ -161,7 +157,7 @@ def load_pretrained_word_vecs(fname, open_encoding='utf-8'):
     load needed word vectors
     :return: dict, {word: str => embedding: numpy array}
     """
-    word2vec = _load_word_vecs(fname, open_encoding=open_encoding)
+    word2vec = load_word_vecs(fname, open_encoding=open_encoding)
     for word, embedding in word2vec.items():
         embedding = np.asarray(embedding, dtype=np.float32)
         word2vec[word] = embedding
@@ -206,7 +202,7 @@ def fit_tokenizer(raw_url, keep_word_num, filters='', oov_tag='<UNK>',
     use corpus fit tokenizer.
     :param raw_url: corpus path or filename.
     :param keep_word_num: the maximum number of words to keep, based
-            on word frequency. Only the most common `vocab_size` words
+            on word frequency. Only the most common `keep_word_num` words
             will be kept.
     :param filters: a string where each element is a character that will be
             filtered from the texts. The default is empty string.
@@ -251,7 +247,7 @@ def generate_in_out_pair_file(fname, tokenizer, mode=0,
                     yield encoded[:-1], encoded[1:]
                 else:
                     raise ValueError('In ' + sys._getframe().f_code.co_name +
-                                     ' func, mode value error.')
+                                     '() func, mode value error.')
 
 
 def process_format_model_in(in_out_pairs, mode, time_step, vocab_size,
@@ -267,7 +263,6 @@ def process_format_model_in(in_out_pairs, mode, time_step, vocab_size,
     :param cut:
     :return: (x, y)
     x.shape: 2d numpy array
-    y.shape:
     """
     x = []
     y = []
@@ -275,13 +270,14 @@ def process_format_model_in(in_out_pairs, mode, time_step, vocab_size,
         x.append(in_out_pair[0])
         y.append(in_out_pair[1])
 
-    # lists of list => 2d numpy array
+    # list of lists => 2d numpy array
     x = pad_sequences(x, maxlen=time_step, padding=pad, truncating=cut)
 
     if mode == 0:
         y = to_categorical(y, num_classes=vocab_size + 1)
     elif mode == 1:
         y = pad_sequences(y, maxlen=time_step, padding=pad, truncating=cut)
+        # y.shape == (batch size, time step, one-hot vec dim)
         y = np.asarray([to_categorical(y[i], vocab_size+1) for i in range(len(y))])
     else:
         raise ValueError('In ' + sys._getframe().f_code.co_name +
@@ -310,41 +306,3 @@ def generate_batch_data_file(fname, tokenizer, mode, time_step, batch_size,
                 yield x, y
                 in_out_pairs = list()
                 batch_samples_count = 0
-
-
-if __name__ == '__main__':
-    corpus = available_corpus[0]
-    corpus = params.get_corpus_params(corpus)
-
-    # ========== test _load_vectors() function ==========
-    word2vec = _load_word_vecs(corpus.fastText_zh_pretrained_wiki_word_vecs_url,
-                               head_n=50)
-    for word, vector in word2vec.items():
-        print(word, end=' => ')
-        for value in vector:
-            print(value, end=' ')
-        print()
-
-    # ========== test _read_words() function ==========
-    all_distinct_words = _read_words(corpus.raw_path)
-    for word in all_distinct_words:
-        print(word, end=' | ')
-    print('\ntotal distinct words number:', len(all_distinct_words))
-
-    # ========== test NLTK ==========
-    sentence = "i'v     isn't   can't haven't aren't won't i'm it's we're who's where's i'd we'll we've he's."
-    tokens = nltk.word_tokenize(tools.remove_symbols(sentence, params.MATCH_SINGLE_QUOTE_STR).lower())
-    print(tokens)
-    for token in tokens:
-        print(token, end=' ')
-    print()
-
-    # ========== test get_needed_vectors() func ==========
-    word2vec = get_needed_vectors(raw_path=corpus.raw_path,
-                                  full_vecs_fname=corpus.fastText_zh_pretrained_wiki_word_vecs_url,
-                                  needed_vecs_fname=corpus.processed_zh_word_vecs_url)
-    for word, vector in word2vec.items():
-        print(word, end=' ')
-        print(vector)
-
-    # ========== other test ==========
