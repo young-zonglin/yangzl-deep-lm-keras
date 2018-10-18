@@ -18,5 +18,5 @@ class RNMTPlusEncoderBasedModel(BasicModel):
                                               self.hyperparams.recurrent_l2_lambda,
                                               self.hyperparams.bias_l2_lambda,
                                               self.hyperparams.activity_l2_lambda)
-        context_repr_seq = RNMT_plus_encoder(word_vec_seq)
-        return context_repr_seq
+        hidden_seq = RNMT_plus_encoder(word_vec_seq)
+        return hidden_seq

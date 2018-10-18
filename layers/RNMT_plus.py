@@ -1,26 +1,28 @@
 from keras import backend as K
 from keras import regularizers
 from keras.callbacks import Callback
-from keras.layers import Bidirectional, LSTM, Dropout, Add
+from keras.layers import LSTM, Dropout, Add
 
 from layers.layers import LayerNormalization
 
 
 class EncoderLayer:
-    def __init__(self, state_dim, lstm_p_dropout,
+    def __init__(self, ith_layer, state_dim, lstm_p_dropout,
                  kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda, activity_l2_lambda):
-        retseq_lstm = LSTM(state_dim, return_sequences=True,
-                           kernel_regularizer=regularizers.l2(kernel_l2_lambda),
-                           recurrent_regularizer=regularizers.l2(recurrent_l2_lambda),
-                           bias_regularizer=regularizers.l2(bias_l2_lambda),
-                           activity_regularizer=regularizers.l2(activity_l2_lambda))
-        self.retseq_bilstm = Bidirectional(retseq_lstm, merge_mode='concat')
-        self.dropout = Dropout(lstm_p_dropout)
-        self.layer_norm = LayerNormalization()
+        self.retseq_uni_lstm = LSTM(state_dim, return_sequences=True,
+                                    name=ith_layer+'th_retseq_uni_lstm',
+                                    kernel_regularizer=regularizers.l2(kernel_l2_lambda),
+                                    recurrent_regularizer=regularizers.l2(recurrent_l2_lambda),
+                                    bias_regularizer=regularizers.l2(bias_l2_lambda),
+                                    activity_regularizer=regularizers.l2(activity_l2_lambda))
+        # self.retseq_bilstm = Bidirectional(retseq_lstm, merge_mode='concat')
+        self.dropout = Dropout(lstm_p_dropout, name=ith_layer+'th_dropout')
+        self.layer_norm = LayerNormalization(name=ith_layer+'th_LN')
 
     def __call__(self, enc_input):
-        hidden_seq = self.retseq_bilstm(enc_input)
+        hidden_seq = self.retseq_uni_lstm(enc_input)
         hidden_seq = self.dropout(hidden_seq)
+        # Residual connection/ identical shortcut connection/skip connection
         if enc_input.shape[-1] == hidden_seq.shape[-1]:
             hidden_seq = Add()([hidden_seq, enc_input])
         return self.layer_norm(hidden_seq)
@@ -29,9 +31,9 @@ class EncoderLayer:
 class Encoder:
     def __init__(self, retseq_layer_num, state_dim, p_dropout,
                  kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda, activity_l2_lambda):
-        self.enc_layers = [EncoderLayer(state_dim, p_dropout,
+        self.enc_layers = [EncoderLayer(str(i+1), state_dim, p_dropout,
                                         kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda,
-                                        activity_l2_lambda) for _ in range(retseq_layer_num)]
+                                        activity_l2_lambda) for i in range(retseq_layer_num)]
 
     def __call__(self, word_vec_seq):
         x = word_vec_seq

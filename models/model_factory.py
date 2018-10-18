@@ -1,7 +1,7 @@
 import sys
 
 from configs.net_conf import available_models
-from models.deep_bilstm_based_model import DeepBiLSTMBasedModel
+from models.deep_unilstm_based_model import DeepUniLSTMBasedModel
 from models.multiheadattn_based_model import MultiHeadAttnBasedModel
 from models.rnmt_encoder_based_model import RNMTPlusEncoderBasedModel
 from models.transformer_encoder_based_model import TransformerEncoderBasedModel
@@ -12,11 +12,11 @@ class ModelFactory:
     @staticmethod
     def make_model(model_name):
         if model_name == available_models[0]:
-            return DeepBiLSTMBasedModel()
+            return DeepUniLSTMBasedModel()
         elif model_name == available_models[1]:
-            return TransformerEncoderBasedModel()
-        elif model_name == available_models[2]:
             return RNMTPlusEncoderBasedModel()
+        elif model_name == available_models[2]:
+            return TransformerEncoderBasedModel()
         elif model_name == available_models[3]:
             return MultiHeadAttnBasedModel()
         else:

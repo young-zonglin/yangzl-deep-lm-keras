@@ -27,7 +27,9 @@ set_session(tf.Session(config=config))
 
 # batch size和seq len随意，word vec dim训练和应用时应一致
 class BasicModel:
-    def __init__(self):
+    def __init__(self, is_training=True):
+        self.is_training = is_training
+
         self.hyperparams = None
         self.mode = None
         self.time_step = None
@@ -140,32 +142,33 @@ class BasicModel:
         word_vec_seq = embedding(word_id_seq)
         # print(embedding.input_shape)
 
-        context_repr_seq = self._do_build(word_vec_seq, word_id_seq)
+        hidden_seq = self._do_build(word_vec_seq, word_id_seq)
         if self.mode == 0:
             enc_lstm = LSTM(self.word_vec_dim,
                             kernel_regularizer=regularizers.l2(self.hyperparams.kernel_l2_lambda),
                             recurrent_regularizer=regularizers.l2(self.hyperparams.recurrent_l2_lambda),
                             bias_regularizer=regularizers.l2(self.hyperparams.bias_l2_lambda),
                             activity_regularizer=regularizers.l2(self.hyperparams.activity_l2_lambda))
-            seq_enc = Bidirectional(enc_lstm, name='enc_bilstm')(context_repr_seq)
+            seq_enc = Bidirectional(enc_lstm, name='enc_bilstm')(hidden_seq)
             seq_enc = Dropout(self.hyperparams.p_dropout, name='enc_dropout')(seq_enc)
-            preds = Dense(self.vocab_size+1, activation='softmax',
+            preds = Dense(self.vocab_size+1, activation='softmax', name='output_layer',
                           kernel_regularizer=regularizers.l2(self.hyperparams.kernel_l2_lambda),
                           bias_regularizer=regularizers.l2(self.hyperparams.bias_l2_lambda),
                           activity_regularizer=regularizers.l2(self.hyperparams.activity_l2_lambda)
                           )(seq_enc)
         else:
-            preds = TimeDistributed(Dense(self.vocab_size+1, activation='softmax',
+            # Apply the same Dense layer instance using same weights to each timestep of input.
+            preds = TimeDistributed(Dense(self.vocab_size+1, activation='softmax', name="output_layer",
                                           kernel_regularizer=regularizers.l2(self.hyperparams.kernel_l2_lambda),
                                           bias_regularizer=regularizers.l2(self.hyperparams.bias_l2_lambda),
                                           activity_regularizer=regularizers.l2(self.hyperparams.activity_l2_lambda))
-                                    )(context_repr_seq)
+                                    )(hidden_seq)
 
         self.model = Model(inputs=word_id_seq, outputs=preds)
 
         record_info = list()
         record_info.append('\n================ In build ================\n')
-        record_info.append(str(self.hyperparams))
+        record_info.append(self.hyperparams.__str__())
         record_str = ''.join(record_info)
         record_url = self.this_model_save_dir + os.path.sep + params.TRAIN_RECORD_FNAME
         tools.print_save_str(record_str, record_url)
@@ -201,7 +204,7 @@ class BasicModel:
         model_saver = ModelCheckpoint(save_url,
                                       monitor=self.hyperparams.early_stop_monitor,
                                       mode=self.hyperparams.early_stop_mode,
-                                      save_best_only=True, save_weights_only=False, verbose=1)
+                                      save_best_only=True, save_weights_only=True, verbose=1)
         history = self.model.fit_generator(reader.generate_batch_data_file(self.train_fname,
                                                                            self.tokenizer,
                                                                            self.mode,
@@ -244,14 +247,14 @@ class BasicModel:
         tools.print_save_str(record_str, record_url)
 
     def save(self, model_url):
-        self.model.save(model_url)
+        self.model.save_weights(model_url)
         print("\n================== 保存模型 ==================")
-        print(self.__class__.__name__, 'has been saved in', model_url)
+        print('The weights of', self.__class__.__name__, 'has been saved in', model_url)
 
     def load(self, model_url):
-        self.model = load_model(model_url)
+        self.model.load_weights(model_url, by_name=True)
         print("\n================== 加载模型 ==================")
-        print('Model has been loaded from', model_url)
+        print('Model\'s weights have been loaded from', model_url)
 
     def __call__(self, x):
         return self.model(x)

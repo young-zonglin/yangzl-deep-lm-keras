@@ -156,14 +156,14 @@ def show_save_record(model_save_dir, history, train_begin_time,
         record_info.append(
             'epoch {0:<4} | acc: {1:6.2f}% | loss: {2:<10.5f} |'
             ' val_acc: {3:6.2f}% | val_loss: {4:<10.5f}\n'.format(i + 1,
-                                                                 acc[i] * 100, loss[i],
-                                                                 val_acc[i] * 100, val_loss[i]))
+                                                                  acc[i] * 100, loss[i],
+                                                                  val_acc[i] * 100, val_loss[i]))
 
     train_start = train_begin_time
     train_end = float(time.time())
-    train_time = train_end - train_start
+    train_duration = train_end - train_start
     record_info.append('\n================ Train end ================\n')
-    record_info.append('Train time: {0:.2f}s\n'.format(train_time))
+    record_info.append('Train duration: {0:.2f}s\n'.format(train_duration))
     record_str = ''.join(record_info)
     record_url = model_save_dir + os.path.sep + params.TRAIN_RECORD_FNAME
     print_save_str(record_str, record_url, save_encoding)

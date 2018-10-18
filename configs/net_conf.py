@@ -5,21 +5,21 @@ from keras.optimizers import Adam, RMSprop
 
 from layers import transformer
 
-model_name_abbr_full = {'DBLBModel': 'DeepBiLSTMBasedModel',
+model_name_abbr_full = {'DULBModel': 'DeepUniLSTMBasedModel',
                         'TEBModel': 'TransformerEncoderBasedModel',
                         'REBModel': "RNMTPlusEncoderBasedModel",
                         'MHABModel': 'MultiHeadAttnBasedModel'}
 model_name_full_abbr = {v: k for k, v in model_name_abbr_full.items()}
-available_models = ['DBLBModel', 'TEBModel', 'REBModel', 'MHABModel']
+available_models = ['DULBModel', 'REBModel', 'TEBModel', 'MHABModel']
 
 
 def get_hyperparams(model_name):
     if model_name == available_models[0]:
-        return DeepBiLSTMHParams()
+        return DeepUniLSTMHParams()
     elif model_name == available_models[1]:
-        return TransformerEncoderHParams()
-    elif model_name == available_models[2]:
         return RNMTPlusEncoderHParams()
+    elif model_name == available_models[2]:
+        return TransformerEncoderHParams()
     elif model_name == available_models[3]:
         return MultiHeadAttnHParams()
     else:
@@ -111,15 +111,15 @@ class BasicHParams:
         return ''.join(ret_info)
 
 
-class DeepBiLSTMHParams(BasicHParams):
+class DeepUniLSTMHParams(BasicHParams):
     """
     The best result is a val_accuracy of about xx.xx%.
     """
     def __init__(self):
-        super(DeepBiLSTMHParams, self).__init__()
+        super(DeepUniLSTMHParams, self).__init__()
         self.mode = 1
 
-        self.bilstm_retseq_layer_num = 1
+        self.unilstm_retseq_layer_num = 1
         self.state_dim = self.word_vec_dim
 
         self.p_dropout = 0.0
@@ -140,10 +140,10 @@ class DeepBiLSTMHParams(BasicHParams):
     def __str__(self):
         ret_info = list()
         ret_info.append('\n================== '+self.current_classname+' ==================\n')
-        ret_info.append('bi-lstm retseq layer num: ' + str(self.bilstm_retseq_layer_num) + '\n')
+        ret_info.append('uni-lstm retseq layer num: ' + str(self.unilstm_retseq_layer_num) + '\n')
         ret_info.append('state dim: ' + str(self.state_dim) + '\n\n')
 
-        super_str = super(DeepBiLSTMHParams, self).__str__()
+        super_str = super(DeepUniLSTMHParams, self).__str__()
         return ''.join(ret_info) + super_str
 
 
@@ -286,7 +286,7 @@ class MultiHeadAttnHParams(BasicHParams):
 
 if __name__ == '__main__':
     print(BasicHParams())
-    print(DeepBiLSTMHParams())
+    print(DeepUniLSTMHParams())
     print(RNMTPlusEncoderHParams())
     print(TransformerEncoderHParams())
     print(MultiHeadAttnHParams())

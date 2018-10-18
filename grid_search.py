@@ -9,7 +9,7 @@ from models.model_factory import ModelFactory
 from utils import tools
 
 
-def tune_dropout_rate_DBLBModel():
+def tune_dropout_rate_DULBModel():
     model_name = available_models[0]
     model_full_name = model_name_abbr_full[model_name]
     print('============ ' + model_full_name + ' tune dropout rate ============')
@@ -25,4 +25,4 @@ def tune_dropout_rate_DBLBModel():
 
 
 if __name__ == '__main__':
-    tune_dropout_rate_DBLBModel()
+    tune_dropout_rate_DULBModel()
