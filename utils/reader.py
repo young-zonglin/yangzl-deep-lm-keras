@@ -231,23 +231,25 @@ def generate_in_out_pair_file(fname, tokenizer, mode=0,
     """
     generate func, generate a input-output pair at a time.
     yield a tuple at a time.
+    will loop indefinitely on the dataset.
     mode 0:
     mode 1:
     :return: a iterator
     """
-    with open(fname, 'r', encoding=open_encoding) as file:
-        for line in file:
-            if line and line != '\n':
-                encoded = tokenizer.texts_to_sequences([line])[0]
-                if mode == 0:
-                    for i in range(1, len(encoded)):
-                        in_out_pair = encoded[:i], encoded[i]
-                        yield in_out_pair
-                elif mode == 1:
-                    yield encoded[:-1], encoded[1:]
-                else:
-                    raise ValueError('In ' + sys._getframe().f_code.co_name +
-                                     '() func, mode value error.')
+    while 1:
+        with open(fname, 'r', encoding=open_encoding) as file:
+            for line in file:
+                if line and line != '\n':
+                    encoded = tokenizer.texts_to_sequences([line])[0]
+                    if mode == 0:
+                        for i in range(1, len(encoded)):
+                            in_out_pair = encoded[:i], encoded[i]
+                            yield in_out_pair
+                    elif mode == 1:
+                        yield encoded[:-1], encoded[1:]
+                    else:
+                        raise ValueError('In ' + sys._getframe().f_code.co_name +
+                                         '() func, mode value error.')
 
 
 def process_format_model_in(in_out_pairs, mode, time_step, vocab_size,
@@ -292,17 +294,16 @@ def generate_batch_data_file(fname, tokenizer, mode, time_step, batch_size,
     Will loop indefinitely on the dataset.
     :return: a iterator
     """
-    while True:
-        batch_samples_count = 0
-        in_out_pairs = list()
-        for in_out_pair in generate_in_out_pair_file(fname, tokenizer, mode, open_encoding):
-            # Return fixed and the same number of samples each time.
-            if batch_samples_count < batch_size - 1:
-                in_out_pairs.append(in_out_pair)
-                batch_samples_count += 1
-            else:
-                in_out_pairs.append(in_out_pair)
-                x, y = process_format_model_in(in_out_pairs, mode, time_step, vocab_size, pad, cut)
-                yield x, y
-                in_out_pairs = list()
-                batch_samples_count = 0
+    batch_samples_count = 0
+    in_out_pairs = list()
+    for in_out_pair in generate_in_out_pair_file(fname, tokenizer, mode, open_encoding):
+        # Return fixed and the same number of samples each time.
+        if batch_samples_count < batch_size - 1:
+            in_out_pairs.append(in_out_pair)
+            batch_samples_count += 1
+        else:
+            in_out_pairs.append(in_out_pair)
+            x, y = process_format_model_in(in_out_pairs, mode, time_step, vocab_size, pad, cut)
+            yield x, y
+            in_out_pairs = list()
+            batch_samples_count = 0
