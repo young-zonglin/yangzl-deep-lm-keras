@@ -118,6 +118,7 @@ class DeepUniLSTMHParams(BasicHParams):
     def __init__(self):
         super(DeepUniLSTMHParams, self).__init__()
         self.mode = 1
+        self.oov_tag = '<unk>'
 
         self.unilstm_retseq_layer_num = 1
         self.state_dim = self.word_vec_dim
@@ -133,7 +134,7 @@ class DeepUniLSTMHParams(BasicHParams):
         self.lr_scheduler = LRSchedulerDoNothing()
 
         self.early_stop_monitor = 'val_loss'
-        self.early_stop_patience = 20
+        self.early_stop_patience = 40
 
         self.batch_size = 512
 

@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import time
 
 import matplotlib.pyplot as plt
@@ -15,12 +16,15 @@ def get_fnames_under_path(path):
     :param path: string
     :return: filename seq
     """
-    fnames = list()
+    if not os.path.isdir(path):
+        raise ValueError('In ' + sys._getframe().f_code.co_name +
+                         '() function, path value error.')
+    fnames = set()
     for fname in os.listdir(path):
         fname = os.path.join(path, fname)
         if os.path.isdir(fname):
             continue
-        fnames.append(fname)
+        fnames.add(fname)
     return fnames
 
 
@@ -67,7 +71,7 @@ def remove_symbols(seq, pattern_str):
     """
     remove specified symbol from seq
     :param seq:
-    :param pattern_str: 例如text-preprocess项目的remove_comma_from_number()
+    :param pattern_str: 例如text-preprocessing项目的remove_comma_from_number()
     :return: new seq
     """
     match_symbol_pattern = re.compile(pattern_str)
@@ -81,14 +85,15 @@ def remove_symbols(seq, pattern_str):
             break
     return seq
 
+
 # https://zhidao.baidu.com/question/1830830474764728580.html
-addr_to_full = {"n't": 'not', "'m": 'am', "'s": 'is', "'re": 'are',
+abbr_to_full = {"n't": 'not', "'m": 'am', "'s": 'is', "'re": 'are',
                 "'d": 'would', "'ll": 'will', "'ve": 'have'}
 
 
-def transform_addr_full_format(token):
-    if token in addr_to_full:
-        return addr_to_full[token]
+def transform_abbr_full_format(token):
+    if token in abbr_to_full:
+        return abbr_to_full[token]
     else:
         return token
 

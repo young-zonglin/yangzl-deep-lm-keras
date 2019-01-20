@@ -14,12 +14,12 @@ def tune_dropout_rate_DULBModel():
     model_full_name = model_name_abbr_full[model_name]
     print('============ ' + model_full_name + ' tune dropout rate ============')
     # Don't set dropout rate too large, because it will cause information loss.
-    p_dropouts = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    p_dropouts = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     for p_dropout in p_dropouts:
         language_model = ModelFactory.make_model(model_name)
         hyperparams = net_conf.get_hyperparams(model_name)
         hyperparams.p_dropout = p_dropout
-        corpus_name = available_corpus[0]
+        corpus_name = available_corpus[2]
         corpus_params = params.get_corpus_params(corpus_name)
         tools.train_model(language_model, hyperparams, corpus_params)
 

@@ -2,21 +2,20 @@ import os
 import time
 
 import tensorflow as tf
+from keras import regularizers
 from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Input, Embedding
-from keras.models import Model
-from keras.models import load_model
 from keras.layers import TimeDistributed, Bidirectional, LSTM, Dropout, Dense
-from keras import regularizers
+from keras.models import Model
 
-from configs import params, net_conf
+from configs import params
 from configs.net_conf import model_name_full_abbr
 from configs.params import corpus_name_full_abbr
 from utils import tools, reader
 
 # Specify which GPU card to use.
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # TensorFlow显存管理
 config = tf.ConfigProto()
