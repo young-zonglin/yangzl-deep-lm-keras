@@ -2,9 +2,7 @@ import sys
 
 from configs.net_conf import available_models
 from models.deep_unilstm_based_model import DeepUniLSTMBasedModel
-from models.multiheadattn_based_model import MultiHeadAttnBasedModel
-from models.rnmt_encoder_based_model import RNMTPlusEncoderBasedModel
-from models.transformer_encoder_based_model import TransformerEncoderBasedModel
+from models.rnmt_decoder_based_model import RNMTPlusDecoderBasedModel
 
 
 class ModelFactory:
@@ -14,11 +12,7 @@ class ModelFactory:
         if model_name == available_models[0]:
             return DeepUniLSTMBasedModel()
         elif model_name == available_models[1]:
-            return RNMTPlusEncoderBasedModel()
-        elif model_name == available_models[2]:
-            return TransformerEncoderBasedModel()
-        elif model_name == available_models[3]:
-            return MultiHeadAttnBasedModel()
+            return RNMTPlusDecoderBasedModel()
         else:
             raise ValueError('In '+ModelFactory().__class__.__name__ + '.'+
                              sys._getframe().f_code.co_name +

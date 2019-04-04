@@ -3,25 +3,17 @@ import sys
 from keras.callbacks import Callback
 from keras.optimizers import Adam, RMSprop
 
-from layers import transformer
-
 model_name_abbr_full = {'DULBModel': 'DeepUniLSTMBasedModel',
-                        'TEBModel': 'TransformerEncoderBasedModel',
-                        'REBModel': "RNMTPlusEncoderBasedModel",
-                        'MHABModel': 'MultiHeadAttnBasedModel'}
+                        'RDBModel': "RNMTPlusDecoderBasedModel"}
 model_name_full_abbr = {v: k for k, v in model_name_abbr_full.items()}
-available_models = ['DULBModel', 'REBModel', 'TEBModel', 'MHABModel']
+available_models = ['DULBModel', 'RDBModel']
 
 
 def get_hyperparams(model_name):
     if model_name == available_models[0]:
         return DeepUniLSTMHParams()
     elif model_name == available_models[1]:
-        return RNMTPlusEncoderHParams()
-    elif model_name == available_models[2]:
-        return TransformerEncoderHParams()
-    elif model_name == available_models[3]:
-        return MultiHeadAttnHParams()
+        return RNMTPlusDecoderHParams()
     else:
         raise ValueError('In ' + sys._getframe().f_code.co_name +
                          '() func, model_name value error.')
@@ -136,7 +128,7 @@ class DeepUniLSTMHParams(BasicHParams):
         self.early_stop_monitor = 'val_loss'
         self.early_stop_patience = 40
 
-        self.batch_size = 512
+        self.batch_size = 64
 
     def __str__(self):
         ret_info = list()
@@ -149,10 +141,10 @@ class DeepUniLSTMHParams(BasicHParams):
 
 
 # The scale of the model and cell state dim should be proportional to the scale of the data.
-class RNMTPlusEncoderHParams(BasicHParams):
+class RNMTPlusDecoderHParams(BasicHParams):
     def __init__(self):
-        super(RNMTPlusEncoderHParams, self).__init__()
-        # follow SBLDModel
+        super(RNMTPlusDecoderHParams, self).__init__()
+        # follow DULBModel
         self.retseq_layer_num = 1
         self.state_dim = self.word_vec_dim
 
@@ -187,107 +179,11 @@ class RNMTPlusEncoderHParams(BasicHParams):
         ret_info.append('beta_2: ' + str(self.beta_2) + '\n')
         ret_info.append('epsilon: ' + str(self.eps) + '\n')
 
-        super_str = super(RNMTPlusEncoderHParams, self).__str__()
-        return ''.join(ret_info) + super_str
-
-
-class TransformerEncoderHParams(BasicHParams):
-    """
-    A model configured with the following parameters
-    is best able to achieve a val_loss value of approximately 0.xxxx
-    or a val_accuracy of about xx.xx%.
-    """
-    def __init__(self):
-        super(TransformerEncoderHParams, self).__init__()
-        self.transformer_mode = 0
-        self.word_vec_dim = 300
-        self.layers_num = 1  # learning ability is enough
-        self.d_model = self.word_vec_dim
-        # d_ff, imitate original paper
-        self.d_inner_hid = int(self.d_model*4)
-        self.n_head = 5  # h head, imitate the original paper
-        # In original paper, d_k = d_v = 64
-        self.d_k = self.d_v = int(self.d_model/self.n_head)
-        self.d_pos_enc = self.d_model
-        # 0.3 or 0.4 is a good value.
-        self.p_dropout = 0.0
-
-        self.lr = 0.001
-        self.beta_1 = 0.9
-        self.beta_2 = 0.98
-        self.eps = 1e-9
-        self.optimizer = Adam(self.lr, self.beta_1, self.beta_2, epsilon=self.eps)  # follow origin paper
-        self.warmup_step = 4000  # in origin paper, this value is set to 4000
-        # This learning rate scheduling strategy is very important.
-        self.lr_scheduler = transformer.LRSchedulerPerStep(self.d_model, self.warmup_step)
-
-        self.pad = 'post'
-        self.cut = 'post'
-
-        # acc and val_acc have a stagnant phase at the beginning.
-        # loss and val_loss are still declining.
-        self.early_stop_monitor = 'val_loss'
-        # dropout rate up, stagnation duration also up.
-        self.early_stop_patience = 40
-
-        # if set too small => GPU usage rate is low => training is slow
-        # if set too large => will miss more samples
-        # When set batch size to 512, the performance of the model on the validation set
-        # is close to setting the batch size to 128.
-        self.batch_size = 512
-
-    def __str__(self):
-        ret_info = list()
-        ret_info.append('\n================== '+self.current_classname+' ==================\n')
-        ret_info.append('transformer mode: ' + str(self.transformer_mode) + '\n')
-        ret_info.append('encoder layer num: ' + str(self.layers_num) + '\n')
-        ret_info.append('d_model: ' + str(self.d_model) + '\n')
-        ret_info.append('dim of inner hid: ' + str(self.d_inner_hid) + '\n')
-        ret_info.append('n head: ' + str(self.n_head) + '\n')
-        ret_info.append('dim of k: ' + str(self.d_k) + '\n')
-        ret_info.append('dim of v: ' + str(self.d_v) + '\n')
-        ret_info.append('pos enc dim: ' + str(self.d_pos_enc) + '\n\n')
-
-        ret_info.append('lr: ' + str(self.lr) + '\n')
-        ret_info.append('beta_1: ' + str(self.beta_1) + '\n')
-        ret_info.append('beta_2: ' + str(self.beta_2) + '\n')
-        ret_info.append('epsilon: ' + str(self.eps) + '\n')
-        ret_info.append('warm up step: ' + str(self.warmup_step) + '\n')
-
-        super_str = super(TransformerEncoderHParams, self).__str__()
-        return ''.join(ret_info) + super_str
-
-
-class MultiHeadAttnHParams(BasicHParams):
-    def __init__(self):
-        super(MultiHeadAttnHParams, self).__init__()
-        self.word_vec_dim = 300
-        self.d_model = self.word_vec_dim
-        self.n_head = 5  # h head
-        self.d_k = self.d_v = int(self.d_model / self.n_head)
-        self.p_dropout = 0.1
-
-        self.pad = 'post'
-        self.cut = 'post'
-
-        self.early_stop_monitor = 'val_loss'
-
-        self.batch_size = 128
-
-    def __str__(self):
-        ret_info = list()
-        ret_info.append('\n================== ' + self.current_classname + ' ==================\n')
-        ret_info.append('n head: ' + str(self.n_head) + '\n')
-        ret_info.append('dim of k: ' + str(self.d_k) + '\n')
-        ret_info.append('dim of v: ' + str(self.d_v) + '\n\n')
-
-        super_str = super(MultiHeadAttnHParams, self).__str__()
+        super_str = super(RNMTPlusDecoderHParams, self).__str__()
         return ''.join(ret_info) + super_str
 
 
 if __name__ == '__main__':
     print(BasicHParams())
     print(DeepUniLSTMHParams())
-    print(RNMTPlusEncoderHParams())
-    print(TransformerEncoderHParams())
-    print(MultiHeadAttnHParams())
+    print(RNMTPlusDecoderHParams())

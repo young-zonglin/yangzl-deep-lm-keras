@@ -6,7 +6,7 @@ from keras.layers import LSTM, Dropout, Add
 from layers.layers import LayerNormalization
 
 
-class EncoderLayer:
+class DecoderLayer:
     def __init__(self, ith_layer, state_dim, lstm_p_dropout,
                  kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda, activity_l2_lambda):
         self.retseq_uni_lstm = LSTM(state_dim, return_sequences=True,
@@ -28,17 +28,17 @@ class EncoderLayer:
         return self.layer_norm(hidden_seq)
 
 
-class Encoder:
+class Decoder:
     def __init__(self, retseq_layer_num, state_dim, p_dropout,
                  kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda, activity_l2_lambda):
-        self.enc_layers = [EncoderLayer(str(i+1), state_dim, p_dropout,
+        self.dec_layers = [DecoderLayer(str(i + 1), state_dim, p_dropout,
                                         kernel_l2_lambda, recurrent_l2_lambda, bias_l2_lambda,
                                         activity_l2_lambda) for i in range(retseq_layer_num)]
 
     def __call__(self, word_vec_seq):
         x = word_vec_seq
-        for enc_layer in self.enc_layers:
-            x = enc_layer(x)
+        for dec_layer in self.dec_layers:
+            x = dec_layer(x)
         return x
 
 
