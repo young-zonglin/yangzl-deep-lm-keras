@@ -90,7 +90,9 @@ class BasicModel:
                                               hyperparams.filters, hyperparams.oov_tag,
                                               hyperparams.char_level,
                                               self.open_encoding)
-        self.vocab_size = len(self.tokenizer.word_index)
+
+        max_id = max(map(lambda x: x[1], list(self.tokenizer.word_index.items())))
+        self.vocab_size = min(max_id, self.keep_word_num)
 
         self.pad = self.hyperparams.pad
         self.cut = self.hyperparams.cut
@@ -183,8 +185,6 @@ class BasicModel:
                            optimizer=self.hyperparams.optimizer,
                            metrics=['accuracy'])
 
-        # Transformer-based model的图太复杂太乱，没有看的必要
-        # 不要在IDE中打开，否则会直接OOM
         # model_vis_url = self.this_model_save_dir + os.path.sep + params.MODEL_VIS_FNAME
         # plot_model(self.model, to_file=model_vis_url, show_shapes=True, show_layer_names=True)
 
